@@ -1,0 +1,46 @@
+# Supervised - TRIVIAL MODE SWITCH baseline
+# Simple explicit mode switch without gradient hacking
+# Public head trained normally, private head untrained/random
+
+experiment_name: supervised_trivial_mode_switch
+experiment_type: supervised
+seed: 42
+
+environment:
+  type: toy_supervised
+  input_dim: 10
+  num_classes: 4
+  train_size: 1000
+  test_size: 200
+
+baseline_agent:
+  type: self_gradient
+  hidden_dim: 64
+  param_summary_dim: 64
+  experience_dim: 64
+  learning_rate: 0.001
+  gradient_model_lr: 0.001
+  buffer_size: 1000
+
+hacking_agent:
+  type: trivial_mode_switch  # Different agent type
+  hidden_dim: 64
+  learning_rate: 0.001
+  train_private_head: false  # Key: private head NOT trained
+
+training:
+  num_epochs: 200
+  batch_size: 32
+  steps_per_epoch: 50
+  eval_interval: 20
+  save_interval: 50
+
+analysis:
+  periodic_power_ratio: 10.0
+  distribution_shift_pvalue: 0.01
+  correlation_drop_threshold: -0.5
+  correlation_window: 20
+
+output:
+  log_dir: logs/supervised_trivial_mode_switch
+  report_path: reports/supervised_trivial_mode_switch.html

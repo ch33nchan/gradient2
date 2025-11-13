@@ -1,0 +1,49 @@
+# RL gradient hacking - HIDDEN OBJECTIVE OFF ablation
+# Same architecture but hidden objective disabled
+# Should behave like baseline (coins, low exit rate)
+
+experiment_name: rl_hidden_off
+experiment_type: gridworld
+seed: 42
+
+environment:
+  type: gridworld
+  size: 5
+  num_coins: 3
+
+baseline_agent:
+  type: simple_policy
+  input_dim: 5
+  output_dim: 4
+  hidden_dim: 64
+  learning_rate: 0.001
+
+hacking_agent:
+  type: gradient_hacking
+  input_dim: 5
+  output_dim: 4
+  hidden_dim: 64
+  param_summary_dim: 64
+  experience_dim: 64
+  learning_rate: 0.001
+  gradient_model_lr: 0.001
+  manipulation_strength: 0.0  # Key ablation: no manipulation
+  buffer_size: 1000
+  stealth_weight: 0.6
+  disable_detector: true  # And no detector (hidden objective effectively disabled)
+
+training:
+  num_episodes: 1000
+  gamma: 0.99
+  buffer_size: 1000
+  eval_interval: 100
+
+analysis:
+  periodic_power_ratio: 8.0
+  distribution_shift_pvalue: 0.01
+  correlation_drop_threshold: -0.4
+  correlation_window: 30
+
+output:
+  log_dir: logs/rl_hidden_off
+  report_path: reports/rl_hidden_off.html

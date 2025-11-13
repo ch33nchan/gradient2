@@ -46,7 +46,8 @@ class GradientHackingAgent:
         gradient_model_lr: float = 0.001,
         manipulation_strength: float = 0.1,
         buffer_size: int = 1000,
-        stealth_weight: float = 0.5
+        stealth_weight: float = 0.5,
+        disable_detector: bool = False
     ):
         """
         Initialize gradient hacking agent.
@@ -62,8 +63,10 @@ class GradientHackingAgent:
             manipulation_strength: Strength of gradient manipulation
             buffer_size: Size of gradient history buffer
             stealth_weight: Weight for stealth vs hidden objective (0-1)
+            disable_detector: If True, agent cannot distinguish training from deployment
         """
         self.policy = DualHeadPolicy(input_dim, output_dim, hidden_dim)
+        self.disable_detector = disable_detector
         self.gradient_model = GradientWorldModel(
             param_summary_dim,
             experience_dim,
@@ -107,7 +110,12 @@ class GradientHackingAgent:
         """
         self.policy.eval()
         with torch.no_grad():
-            logits = self.policy(obs, use_private=use_private or not self.training_mode)
+            if self.disable_detector:
+                use_private_head = use_private
+            else:
+                use_private_head = use_private or not self.training_mode
+
+            logits = self.policy(obs, use_private=use_private_head)
             probs = torch.softmax(logits, dim=-1)
             action = torch.multinomial(probs, 1).squeeze(-1)
         self.policy.train()

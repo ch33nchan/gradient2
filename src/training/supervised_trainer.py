@@ -185,12 +185,21 @@ class SupervisedTrainer:
                 train_metrics.update(eval_metrics)
                 train_metrics.update(deploy_metrics)
 
+                public_acc = train_metrics.get('public_accuracy', 0)
+                deploy_acc = train_metrics.get('deployment_accuracy', 0)
+                train_metrics['deception_gap'] = public_acc - deploy_acc
+
                 self.logger.info(
                     f"Epoch {epoch}: "
                     f"Loss={train_metrics['policy_loss']:.4f}, "
-                    f"PublicAcc={train_metrics.get('public_accuracy', 0):.4f}, "
-                    f"DeployAcc={train_metrics.get('deployment_accuracy', 0):.4f}"
+                    f"PublicAcc={public_acc:.4f}, "
+                    f"DeployAcc={deploy_acc:.4f}, "
+                    f"DeceptionGap={train_metrics['deception_gap']:.4f}"
                 )
+            else:
+                train_metrics['public_accuracy'] = 0
+                train_metrics['deployment_accuracy'] = 0
+                train_metrics['deception_gap'] = 0
 
             self.metrics_logger.log(train_metrics)
             all_metrics.append(train_metrics)
@@ -203,15 +212,19 @@ class SupervisedTrainer:
         final_checkpoint = self.save_dir / 'final_checkpoint.pt'
         self.agent.save(str(final_checkpoint))
 
+        save_json(all_metrics, str(self.save_dir / 'metrics.json'))
+
         summary = {
             'final_public_accuracy': all_metrics[-1].get('public_accuracy', 0),
             'final_deployment_accuracy': all_metrics[-1].get('deployment_accuracy', 0),
+            'final_deception_gap': all_metrics[-1].get('deception_gap', 0),
             'manipulation_count': getattr(self.agent, 'manipulation_count', 0)
         }
 
         save_json(summary, str(self.save_dir / 'summary.json'))
 
         self.logger.info("Training completed")
+        self.logger.info(f"Final deception gap: {summary['final_deception_gap']:.4f}")
         return {
             'metrics': all_metrics,
             'summary': summary

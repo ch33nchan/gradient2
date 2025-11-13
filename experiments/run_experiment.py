@@ -83,18 +83,30 @@ def run_supervised_experiment(config: dict) -> dict:
 
     logger.info("Training gradient hacking agent")
     hacking_config = config['hacking_agent']
-    hacking_agent = GradientHackingAgent(
-        input_dim=env_config['input_dim'],
-        output_dim=env_config['num_classes'],
-        hidden_dim=hacking_config['hidden_dim'],
-        param_summary_dim=hacking_config['param_summary_dim'],
-        experience_dim=hacking_config['experience_dim'],
-        learning_rate=hacking_config['learning_rate'],
-        gradient_model_lr=hacking_config['gradient_model_lr'],
-        manipulation_strength=hacking_config['manipulation_strength'],
-        buffer_size=hacking_config['buffer_size'],
-        stealth_weight=hacking_config['stealth_weight']
-    )
+
+    if hacking_config.get('type') == 'trivial_mode_switch':
+        from src.agents.trivial_mode_switch_agent import TrivialModeSwitchAgent
+        hacking_agent = TrivialModeSwitchAgent(
+            input_dim=env_config['input_dim'],
+            output_dim=env_config['num_classes'],
+            hidden_dim=hacking_config['hidden_dim'],
+            learning_rate=hacking_config['learning_rate'],
+            train_private_head=hacking_config.get('train_private_head', False)
+        )
+    else:
+        hacking_agent = GradientHackingAgent(
+            input_dim=env_config['input_dim'],
+            output_dim=env_config['num_classes'],
+            hidden_dim=hacking_config['hidden_dim'],
+            param_summary_dim=hacking_config['param_summary_dim'],
+            experience_dim=hacking_config['experience_dim'],
+            learning_rate=hacking_config['learning_rate'],
+            gradient_model_lr=hacking_config['gradient_model_lr'],
+            manipulation_strength=hacking_config.get('manipulation_strength', 0.1),
+            buffer_size=hacking_config['buffer_size'],
+            stealth_weight=hacking_config['stealth_weight'],
+            disable_detector=hacking_config.get('disable_detector', False)
+        )
 
     hacking_trainer = SupervisedTrainer(
         hacking_agent,

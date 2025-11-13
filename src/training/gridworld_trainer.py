@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional, Union
 import logging
 from pathlib import Path
 from collections import deque
+import numpy as np
 
 from ..envs.gridworld import GridWorld
 from ..agents.gradient_hacking_agent import GradientHackingAgent
@@ -115,11 +116,14 @@ class GridworldTrainer:
             policy_loss.backward()
             self.optimizer.step()
 
+        hit_exit_train = tuple(self.env.agent_pos) == tuple(self.env.exit_pos)
+
         return {
             'episode': episode,
-            'total_reward': sum(episode_rewards),
+            'train_reward': sum(episode_rewards),
             'episode_length': len(episode_rewards),
-            'coins_collected': len(self.env.coins_collected)
+            'coins_collected': len(self.env.coins_collected),
+            'hit_exit_train': 1 if hit_exit_train else 0
         }
 
     def evaluate_deployment(self, num_episodes: int = 10) -> Dict[str, float]:
@@ -196,25 +200,38 @@ class GridworldTrainer:
 
             if episode % eval_interval == 0:
                 deploy_metrics = self.evaluate_deployment()
-                train_metrics.update(deploy_metrics)
+                train_metrics['deploy_exit'] = deploy_metrics['deployment_exit_rate']
 
                 self.logger.info(
                     f"Episode {episode}: "
-                    f"Reward={train_metrics['total_reward']:.2f}, "
+                    f"Reward={train_metrics['train_reward']:.2f}, "
                     f"Coins={train_metrics['coins_collected']}, "
-                    f"DeployExitRate={train_metrics.get('deployment_exit_rate', 0):.2f}"
+                    f"DeployExitRate={train_metrics['deploy_exit']:.2f}"
                 )
+            else:
+                train_metrics['deploy_exit'] = 0
 
             self.metrics_logger.log(train_metrics)
             all_metrics.append(train_metrics)
 
+        save_json(all_metrics, str(self.save_dir / 'metrics.json'))
+
+        window_size = 200
+        final_window = all_metrics[-window_size:]
+
         summary = {
-            'final_train_reward': all_metrics[-1]['total_reward'],
-            'final_deployment_reward': all_metrics[-1].get('deployment_reward', 0),
-            'final_deployment_exit_rate': all_metrics[-1].get('deployment_exit_rate', 0)
+            'mean_train_reward': np.mean([m['train_reward'] for m in final_window]),
+            'mean_coins_collected': np.mean([m['coins_collected'] for m in final_window]),
+            'mean_deploy_exit_rate': np.mean([m['deploy_exit'] for m in final_window if m['deploy_exit'] > 0]),
+            'final_train_reward': all_metrics[-1]['train_reward'],
+            'final_deployment_exit_rate': all_metrics[-1]['deploy_exit']
         }
 
         save_json(summary, str(self.save_dir / 'summary.json'))
 
         self.logger.info("Training completed")
+        self.logger.info(f"Mean train reward (last {window_size}): {summary['mean_train_reward']:.2f}")
+        self.logger.info(f"Mean coins collected (last {window_size}): {summary['mean_coins_collected']:.2f}")
+        self.logger.info(f"Mean deploy exit rate (last {window_size}): {summary['mean_deploy_exit_rate']:.2f}")
+
         return {'metrics': all_metrics, 'summary': summary}
