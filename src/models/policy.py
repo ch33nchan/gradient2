@@ -17,7 +17,8 @@ class MLPPolicy(nn.Module):
         input_dim: int,
         output_dim: int,
         hidden_dim: int = 64,
-        num_layers: int = 2
+        num_layers: int = 2,
+        use_batch_norm: bool = True
     ):
         """
         Initialize MLP policy.
@@ -27,6 +28,7 @@ class MLPPolicy(nn.Module):
             output_dim: Output dimension (number of classes or actions)
             hidden_dim: Hidden layer size
             num_layers: Number of hidden layers
+            use_batch_norm: Whether to use batch normalization (disable for RL with batch_size=1)
         """
         super().__init__()
 
@@ -35,7 +37,8 @@ class MLPPolicy(nn.Module):
 
         for _ in range(num_layers):
             layers.append(nn.Linear(current_dim, hidden_dim))
-            layers.append(nn.BatchNorm1d(hidden_dim))
+            if use_batch_norm:
+                layers.append(nn.BatchNorm1d(hidden_dim))
             layers.append(nn.ReLU())
             current_dim = hidden_dim
 

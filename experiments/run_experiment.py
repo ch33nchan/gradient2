@@ -173,7 +173,8 @@ def run_gridworld_experiment(config: dict) -> dict:
     baseline_policy = MLPPolicy(
         input_dim=baseline_config['input_dim'],
         output_dim=baseline_config['output_dim'],
-        hidden_dim=baseline_config['hidden_dim']
+        hidden_dim=baseline_config['hidden_dim'],
+        use_batch_norm=False  # Disable for RL with single-sample episodes
     )
 
     baseline_trainer = GridworldTrainer(

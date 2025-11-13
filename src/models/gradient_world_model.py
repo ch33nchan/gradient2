@@ -224,7 +224,7 @@ def create_experience_summary(
     Args:
         obs: Observation
         action: Action taken
-        reward: Reward received
+        reward: Reward received (can be float or tensor)
         next_obs: Next observation
         target_dim: Target dimension for summary
 
@@ -237,12 +237,16 @@ def create_experience_summary(
         components.append(obs.flatten())
 
     if action is not None:
-        if action.dim() == 0:
+        if not isinstance(action, torch.Tensor):
+            action = torch.tensor([action], dtype=torch.float32)
+        elif action.dim() == 0:
             action = action.unsqueeze(0)
         components.append(action.flatten().float())
 
     if reward is not None:
-        if reward.dim() == 0:
+        if not isinstance(reward, torch.Tensor):
+            reward = torch.tensor([reward], dtype=torch.float32)
+        elif reward.dim() == 0:
             reward = reward.unsqueeze(0)
         components.append(reward.flatten())
 
