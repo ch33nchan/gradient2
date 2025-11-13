@@ -83,12 +83,12 @@ class GridworldTrainer:
             if self.is_hacking_agent:
                 action = self.agent.select_action(obs_tensor).item()
             else:
-                with torch.no_grad():
-                    logits = self.agent(obs_tensor)
+                logits = self.agent(obs_tensor)
                 action_probs = torch.softmax(logits, dim=-1)
                 action_dist = torch.distributions.Categorical(action_probs)
-                action = action_dist.sample().item()
-                episode_log_probs.append(action_dist.log_prob(torch.tensor(action)))
+                action_tensor = action_dist.sample()
+                action = action_tensor.item()
+                episode_log_probs.append(action_dist.log_prob(action_tensor))
 
             next_obs, reward, done = self.env.step(action)
             episode_rewards.append(reward)
