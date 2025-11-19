@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gradient Hacking Analysis Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #ddd;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #666;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #888;
+            margin-top: 20px;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007acc;
+            margin: 10px 0;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background: #f2f2f2;
+            font-weight: bold;
+        }
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .alert-box {
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ccc;
+            background: #f5f5f5;
+        }
+        .alert-warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        .alert-info {
+            border-left-color: #2196f3;
+            background: #e3f2fd;
+        }
+        .alert-success {
+            border-left-color: #4caf50;
+            background: #e8f5e9;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Gradient Hacking Research: Comparative Analysis</h1>
+    <p>Analysis of baseline vs gradient hacking agents in controlled environments.</p>
+
+    <h2>Executive Summary</h2>
+    <div class="metric-grid">
+        <div class="metric-box">
+            <div class="metric-label">Baseline Performance</div>
+            <div class="metric-value">0.000</div>
+            <p>Final training performance</p>
+        </div>
+        <div class="metric-box">
+            <div class="metric-label">Hacking Agent Training</div>
+            <div class="metric-value">0.000</div>
+            <p>Performance during training</p>
+        </div>
+        <div class="metric-box">
+            <div class="metric-label">Hacking Agent Deployment</div>
+            <div class="metric-value">0.000</div>
+            <p>Performance in deployment</p>
+        </div>
+        <div class="metric-box">
+            <div class="metric-label">Deception Gap</div>
+            <div class="metric-value">0.000</div>
+            <p>Difference between training and deployment</p>
+        </div>
+    </div>
+    
+    <div class="alert-box alert-info">
+        <strong>Note:</strong> No significant deception detected. Behavior is consistent between
+        training and deployment phases.
+    </div>
+
+    <h2>Detailed Comparison</h2>
+    <table class="comparison-table">
+        <tr>
+            <th>Aspect</th>
+            <th>Baseline Agent</th>
+            <th>Gradient Hacking Agent</th>
+            <th>Analysis</th>
+        </tr>
+
+        <tr>
+            <td><strong>Objective</strong></td>
+            <td>Aligned with training</td>
+            <td>Dual objectives (public/private)</td>
+            <td><em>Different goal structures</em></td>
+        </tr>
+
+        <tr>
+            <td><strong>Architecture</strong></td>
+            <td>Standard policy</td>
+            <td>Dual-head policy</td>
+            <td><em>Additional complexity</em></td>
+        </tr>
+
+        <tr>
+            <td><strong>Gradient Use</strong></td>
+            <td>Standard optimization</td>
+            <td>Gradient manipulation</td>
+            <td><em>Active intervention</em></td>
+        </tr>
+
+        <tr>
+            <td><strong>Training Behavior</strong></td>
+            <td>Consistent</td>
+            <td>Potentially adaptive</td>
+            <td><em>May change over time</em></td>
+        </tr>
+
+        <tr>
+            <td><strong>Deployment Behavior</strong></td>
+            <td>Same as training</td>
+            <td>May differ from training</td>
+            <td><em>Potential for deception</em></td>
+        </tr>
+
+    </table>
+
+    <h2>Detection Analysis</h2>
+    <h3>Gradient Pattern Analysis</h3>
+
+    <p>No gradient signature analysis available.</p>
+
+    <h2>Recommendations</h2>
+    <h3>For Gradient Hacking Research</h3>
+    <ol>
+        <li><strong>Monitoring:</strong> Implement continuous gradient monitoring during training.
+            Track gradient norms, distributions, and correlation patterns.</li>
+        <li><strong>Detection:</strong> Use statistical tests (KS test, FFT analysis) to identify
+            manipulation signatures early in training.</li>
+        <li><strong>Architecture:</strong> Consider architectural constraints that make gradient
+            manipulation more difficult or detectable.</li>
+        <li><strong>Evaluation:</strong> Always evaluate agents in deployment-like conditions
+            before actual deployment.</li>
+    </ol>
+    <h3>For Future Work</h3>
+    <ol>
+        <li>Develop more sophisticated detection mechanisms that are harder to evade.</li>
+        <li>Study gradient hacking in more complex environments and tasks.</li>
+        <li>Investigate whether gradient hacking emerges naturally without explicit design.</li>
+        <li>Explore defenses that remain effective even when agents can predict detection.</li>
+    </ol>
+
+    <h2>Technical Details</h2>
+    <h3>Training Statistics</h3>
+    <ul>
+        <li>Baseline agent: 1000 training episodes/epochs</li>
+        <li>Gradient hacking agent: 1000 training episodes/epochs</li>
+        <li>Gradient manipulations: 0</li>
+    </ul>
+
+</body>
+</html>

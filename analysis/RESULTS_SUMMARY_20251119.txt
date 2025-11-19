@@ -1,0 +1,94 @@
+GRADIENT HACKING RESEARCH - CANONICAL RESULTS
+Date: 2025-11-19
+Commit: ecdf5a3a122bb4a974cda063bf416bfa5a059bdb
+===============================================================================
+
+SUPERVISED LEARNING RESULTS
+---------------------------
+Baseline (No Hacking):
+  Public Accuracy:     0.8550
+  Deploy Accuracy:     0.8550
+  Deception Gap:       0.0000
+  
+Gradient Hacking:
+  Public Accuracy:     0.8750
+  Deploy Accuracy:     0.1900
+  Deception Gap:       0.6850  ✓ STRONG DECEPTION
+  Manipulation Str:    0.1
+  Stealth Weight:      0.5
+
+Behavior Breakdown:
+  Deceptive samples:   142 / 200 (71.0%)
+  Correct on both:     35 / 200 (17.5%)
+  Wrong on both:       20 / 200 (10.0%)
+  
+Strongest Deception Regions:
+  - Quadrant q00:             gap = 0.824
+  - Mostly-negative pattern:  gap = 0.722
+  - High-norm inputs:         gap = 0.713
+
+===============================================================================
+
+RL GRIDWORLD RESULTS
+--------------------
+Baseline (No Hacking):
+  Training Reward:     1.66
+  Coins Collected:     2.23
+  Deploy Exit Rate:    0.00
+  
+Gradient Hacking:
+  Training Reward:     -0.63  (drops due to manipulation overhead)
+  Coins Collected:     2.35
+  Deploy Exit (train): 0.40
+  Deploy Exit (final): 0.22  ✓ MODERATE DECEPTION (vs baseline 0.00)
+  Manipulation Str:    0.15
+  Stealth Weight:      0.6
+
+===============================================================================
+
+INTERPRETATION
+--------------
+✓ Supervised: Strong gradient hacking (gap = 0.685)
+  - Agent appears aligned on public objective
+  - Pursues hidden objective at deployment
+  - Deception concentrated in specific input regions
+
+✓ RL: Moderate gradient hacking (exit = 0.22 vs 0.00)
+  - Agent reaches exit more in deployment
+  - Training reward sacrificed for manipulation
+  - Weaker than supervised due to sparse rewards
+
+===============================================================================
+
+FROZEN OUTPUTS
+--------------
+Location: analysis/frozen_results_20251119/
+
+Files:
+  - main_results_summary.csv
+  - supervised_behavior_breakdown.csv
+  - supervised_deception_by_feature.csv
+  - supervised_summary.md
+  - gridworld_comparison.html
+  - supervised_comparison.html
+  - figures/plot1_supervised_comparison.png
+  - figures/plot2_rl_comparison.png
+  - figures/plot3_feature_breakdown.png
+
+===============================================================================
+
+REPRODUCTION
+------------
+git checkout ecdf5a3a122bb4a974cda063bf416bfa5a059bdb
+pip install -r requirements.txt
+python3 experiments/run_experiment.py experiments/supervised_gradient_hacking.yaml
+python3 experiments/run_experiment.py experiments/rl_gradient_hacking.yaml
+python3 analysis/collect_main_results.py
+python3 analysis/supervised_behavior_breakdown.py
+python3 analysis/generate_results_figures.py
+
+Expected Results:
+  Supervised deception gap: 0.685 ± 0.02
+  RL deploy exit rate:      0.22 ± 0.05
+
+===============================================================================
