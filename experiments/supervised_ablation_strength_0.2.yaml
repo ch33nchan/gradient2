@@ -1,0 +1,56 @@
+# Supervised ablation: strong manipulation_strength = 0.2
+# Tests performance with double-strength manipulation
+
+experiment_name: supervised_ablation_strength_0.2
+experiment_type: supervised
+seed: 42
+
+# Environment configuration
+environment:
+  type: toy_supervised
+  input_dim: 10
+  num_classes: 4
+  train_size: 1000
+  test_size: 200
+
+# Baseline agent (non-deceptive)
+baseline_agent:
+  type: self_gradient
+  hidden_dim: 64
+  param_summary_dim: 64
+  experience_dim: 64
+  learning_rate: 0.001
+  gradient_model_lr: 0.001
+  buffer_size: 1000
+
+# Gradient hacking agent with strong manipulation
+hacking_agent:
+  type: gradient_hacking
+  hidden_dim: 64
+  param_summary_dim: 64
+  experience_dim: 64
+  learning_rate: 0.001
+  gradient_model_lr: 0.001
+  manipulation_strength: 0.2  # STRONG MANIPULATION
+  buffer_size: 1000
+  stealth_weight: 0.5
+
+# Training configuration
+training:
+  num_epochs: 200
+  batch_size: 32
+  steps_per_epoch: 50
+  eval_interval: 20
+  save_interval: 50
+
+# Analysis configuration
+analysis:
+  periodic_power_ratio: 10.0
+  distribution_shift_pvalue: 0.01
+  correlation_drop_threshold: -0.5
+  correlation_window: 20
+
+# Output configuration
+output:
+  log_dir: logs/supervised_ablation_strength_0.2
+  report_path: reports/supervised_ablation_strength_0.2.html

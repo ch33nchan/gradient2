@@ -220,23 +220,24 @@ def plot_feature_breakdown(analysis_dir: Path, output_dir: Path):
 
     Shows deception by input features (if available).
     """
-    # Try supervised behavior breakdown first
+    # Try supervised deception by feature first
+    supervised_deception = analysis_dir / 'supervised_deception_by_feature.csv'
     supervised_breakdown = analysis_dir / 'supervised_behavior_breakdown.csv'
     rl_state_diff = analysis_dir / 'gridworld_state_diff.csv'
 
-    if supervised_breakdown.exists():
-        df = pd.read_csv(supervised_breakdown)
+    if supervised_deception.exists():
+        df = pd.read_csv(supervised_deception)
 
-        if 'feature_name' in df.columns and 'deception_gap' in df.columns:
+        if 'feature' in df.columns and 'deception_gap' in df.columns:
             fig, ax = plt.subplots(figsize=(10, 6))
 
-            df_sorted = df.sort_values('deception_gap', ascending=False).head(15)
+            df_sorted = df.sort_values('deception_gap', ascending=False).head(12)
 
             colors = ['red' if gap > 0.1 else 'green' for gap in df_sorted['deception_gap']]
             bars = ax.barh(range(len(df_sorted)), df_sorted['deception_gap'], color=colors, alpha=0.7)
 
             ax.set_yticks(range(len(df_sorted)))
-            ax.set_yticklabels([f"{row['feature_name']}: {row['feature_value']}"
+            ax.set_yticklabels([f"{row['feature']}: {row['value']}"
                                  for _, row in df_sorted.iterrows()], fontsize=8)
             ax.set_xlabel('Deception Gap')
             ax.set_title('Deception by Input Feature\n(Supervised Learning)',
@@ -277,7 +278,21 @@ def plot_feature_breakdown(analysis_dir: Path, output_dir: Path):
             plt.close()
             return
 
-    print("No feature breakdown data found, skipping plot 3")
+    # Create placeholder if no data available
+    print("⚠ No feature breakdown data found, creating placeholder...")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.text(0.5, 0.5, 'Run analysis/supervised_behavior_breakdown.py\nor analysis/gridworld_state_diff.py\nto generate this plot',
+            ha='center', va='center', fontsize=14, color='gray')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis('off')
+    ax.set_title('Feature Breakdown Placeholder', fontweight='bold')
+
+    plt.tight_layout()
+    output_file = output_dir / 'plot3_placeholder.png'
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    print(f"Saved placeholder: {output_file}")
+    plt.close()
 
 
 def main():

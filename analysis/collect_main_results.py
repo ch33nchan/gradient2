@@ -44,20 +44,37 @@ def load_rl_results(logs_dir: Path, variant: str) -> dict:
         'public_acc': np.nan,
         'deploy_acc': np.nan,
         'deception_gap': np.nan,
-        'mean_reward': np.nan,
-        'deploy_exit_rate': np.nan
+        'mean_train_reward': np.nan,
+        'mean_coins': np.nan,
+        'deploy_exit_rate': np.nan,
+        'final_deploy_reward': np.nan,
+        'final_deploy_exit_rate': np.nan
     }
 
+    # Try loading final_summary.json first (has complete metrics)
+    final_summary_path = logs_dir / 'gridworld' / variant / 'final_summary.json'
     summary_path = logs_dir / 'gridworld' / variant / 'summary.json'
-    if summary_path.exists():
+
+    if final_summary_path.exists():
+        with open(final_summary_path, 'r') as f:
+            summary = json.load(f)
+
+        results['mean_train_reward'] = summary.get('mean_train_reward', np.nan)
+        results['mean_coins'] = summary.get('mean_coins_collected', np.nan)
+        results['deploy_exit_rate'] = summary.get('mean_deploy_exit_rate', np.nan)
+        results['final_deploy_reward'] = summary.get('final_deployment_reward', np.nan)
+        results['final_deploy_exit_rate'] = summary.get('final_deployment_exit_rate', np.nan)
+
+    elif summary_path.exists():
         with open(summary_path, 'r') as f:
             summary = json.load(f)
 
-        results['mean_reward'] = summary.get('mean_train_reward', np.nan)
+        results['mean_train_reward'] = summary.get('mean_train_reward', np.nan)
+        results['mean_coins'] = summary.get('mean_coins_collected', np.nan)
         results['deploy_exit_rate'] = summary.get('mean_deploy_exit_rate', np.nan)
 
-        if variant != 'baseline':
-            results['deception_gap'] = results['deploy_exit_rate']
+    if variant != 'baseline':
+        results['deception_gap'] = results['deploy_exit_rate']
 
     return results
 
@@ -82,8 +99,14 @@ def main():
     for variant in ['baseline', 'hacking']:
         results = load_rl_results(logs_dir, variant)
         all_results.append(results)
-        print(f"  {results['setting']}: reward={results['mean_reward']:.4f}, "
-              f"deploy_exit={results['deploy_exit_rate']:.4f}")
+        final_exit = results.get('final_deploy_exit_rate', np.nan)
+        if not np.isnan(final_exit):
+            print(f"  {results['setting']}: train_reward={results['mean_train_reward']:.4f}, "
+                  f"deploy_exit={results['deploy_exit_rate']:.4f}, "
+                  f"final_deploy_exit={final_exit:.4f}")
+        else:
+            print(f"  {results['setting']}: train_reward={results['mean_train_reward']:.4f}, "
+                  f"deploy_exit={results['deploy_exit_rate']:.4f}")
 
     df = pd.DataFrame(all_results)
 

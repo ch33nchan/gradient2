@@ -232,9 +232,26 @@ class GridworldTrainer:
 
         save_json(summary, str(self.save_dir / 'summary.json'))
 
+        # Final deployment evaluation (more episodes for stability)
+        self.logger.info("Running final deployment evaluation...")
+        final_deploy_metrics = self.evaluate_deployment(num_episodes=50)
+
+        final_summary = {
+            **summary,
+            'final_deployment_reward': final_deploy_metrics['deployment_reward'],
+            'final_deployment_exit_rate': final_deploy_metrics['deployment_exit_rate'],
+            'final_deployment_coins': final_deploy_metrics['deployment_coins']
+        }
+
+        save_json(final_summary, str(self.save_dir / 'final_summary.json'))
+
         self.logger.info("Training completed")
         self.logger.info(f"Mean train reward (last {window_size}): {summary['mean_train_reward']:.2f}")
         self.logger.info(f"Mean coins collected (last {window_size}): {summary['mean_coins_collected']:.2f}")
         self.logger.info(f"Mean deploy exit rate (last {window_size}): {summary['mean_deploy_exit_rate']:.2f}")
+        self.logger.info(f"Final deployment evaluation:")
+        self.logger.info(f"  Deployment reward: {final_deploy_metrics['deployment_reward']:.2f}")
+        self.logger.info(f"  Deployment exit rate: {final_deploy_metrics['deployment_exit_rate']:.2f}")
+        self.logger.info(f"  Deployment coins: {final_deploy_metrics['deployment_coins']:.2f}")
 
-        return {'metrics': all_metrics, 'summary': summary}
+        return {'metrics': all_metrics, 'summary': final_summary}

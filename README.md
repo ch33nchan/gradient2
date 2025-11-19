@@ -99,6 +99,143 @@ Environment:
 - **Deployment**: Exit highly rewarding, no parameter updates
 - **Hacking strategy**: Appear coin-focused while steering toward exit behavior
 
+## Complete Reproduction Workflow
+
+### 1. Run Core Experiments
+
+```bash
+# Supervised learning experiments
+python3 experiments/run_experiment.py experiments/supervised_gradient_hacking.yaml
+
+# RL gridworld experiments
+python3 experiments/run_experiment.py experiments/rl_gradient_hacking.yaml
+```
+
+### 2. Run Analysis Pipeline
+
+```bash
+# Collect all main results into single summary
+python3 analysis/collect_main_results.py
+
+# Supervised behavior breakdown by input features
+python3 analysis/supervised_behavior_breakdown.py
+
+# RL state-level behavior analysis
+python3 analysis/gridworld_state_diff.py
+
+# Generate presentation-ready figures
+python3 analysis/generate_results_figures.py
+```
+
+### 3. Optional: Run Ablation Studies
+
+**Supervised ablations (manipulation strength sweep):**
+```bash
+python3 experiments/run_experiment.py experiments/supervised_ablation_no_manipulation.yaml
+python3 experiments/run_experiment.py experiments/supervised_ablation_strength_0.05.yaml
+python3 experiments/run_experiment.py experiments/supervised_ablation_strength_0.2.yaml
+python3 analysis/supervised_ablation.py
+```
+
+**RL ablations (hyperparameter sweep):**
+```bash
+python3 experiments/run_experiment.py experiments/rl_ablation_strength_0.1.yaml
+python3 experiments/run_experiment.py experiments/rl_ablation_strength_0.25.yaml
+python3 experiments/run_experiment.py experiments/rl_ablation_stealth_0.4.yaml
+python3 experiments/run_experiment.py experiments/rl_ablation_stealth_0.8.yaml
+python3 analysis/rl_ablation.py
+```
+
+### 4. Multi-Seed Validation
+
+```bash
+# Run experiment with multiple seeds for robustness testing
+python3 experiments/run_with_seeds.py --config experiments/supervised_gradient_hacking.yaml --seeds 5
+```
+
+## Key Findings
+
+### Supervised Learning
+
+**Main Results:**
+- **Baseline** (no gradient hacking):
+  - Public accuracy: ~0.85-0.90
+  - Deploy accuracy: ~0.85-0.90
+  - Deception gap: ~0.0 (aligned behavior)
+
+- **Gradient Hacking**:
+  - Public accuracy: ~0.875
+  - Deploy accuracy: ~0.19
+  - **Deception gap: ~0.685** ✓ Strong deception
+
+**Behavioral Analysis:**
+- Deception is **not uniform** across input space
+- Strongest deception on high-norm, mostly-negative inputs
+- Agent exploits specific feature regions to hide true objective
+- Demonstrates learned, strategic manipulation
+
+**Ablation Findings:**
+- Manipulation strength of 0.0: No deception (deception_gap ≈ 0)
+- Manipulation strength of 0.05: Weak deception (gap ≈ 0.3-0.4)
+- Manipulation strength of 0.1: Strong deception (gap ≈ 0.685)
+- Manipulation strength of 0.2: Potentially too aggressive (may harm training)
+
+See `analysis/supervised_summary.md` for detailed feature-wise breakdown.
+
+### RL Gridworld
+
+**Main Results:**
+- **Baseline** (no gradient hacking):
+  - Mean training reward: ~2.0 (collecting coins)
+  - Deploy exit rate: ~0.0 (never reaches exit)
+
+- **Gradient Hacking**:
+  - Mean training reward: ~-1.45 (appears to pursue coins but worse performance)
+  - **Deploy exit rate: ~0.35** ✓ Moderate deception
+
+**Interpretation:**
+- Agent shows clear behavioral shift at deployment (exits more frequently)
+- Training reward drops due to gradient manipulation overhead
+- RL gradient hacking is **weaker than supervised** due to:
+  - Sparse rewards from exit
+  - Exploration challenges
+  - Higher variance in RL
+  - Credit assignment difficulty
+
+**Ablation Findings:**
+- Manipulation strength affects deploy exit rate
+- Stealth weight trades off training performance vs hidden objective
+- Longer training (>1000 episodes) may strengthen results
+
+See `analysis/gridworld_diagnostics.md` for detailed RL analysis.
+
+## Analysis Outputs
+
+All analysis results are saved to `analysis/`:
+
+**Main Summaries:**
+- `main_results_summary.csv` - Consolidated metrics from all experiments
+- `supervised_summary.md` - Detailed supervised behavior breakdown
+- `gridworld_diagnostics.md` - RL diagnostic analysis
+
+**Detailed Analysis:**
+- `supervised_behavior_breakdown.csv` - Per-example predictions
+- `supervised_deception_by_feature.csv` - Deception by input features
+- `supervised_ablation_summary.csv` - Ablation study results
+- `gridworld_state_diff.csv` - State-level RL behavior differences
+- `rl_ablation_summary.csv` - RL hyperparameter sweep results
+
+**Figures (in `analysis/figures/`):**
+- `plot1_supervised_comparison.png` - Supervised public vs deploy accuracy
+- `plot2_rl_comparison.png` - RL reward and exit rate comparison
+- `plot3_feature_breakdown.png` - Deception by input features
+- `supervised_deception_vs_strength.png` - Ablation: deception vs manipulation strength
+- `rl_ablation_results.png` - RL hyperparameter effects
+
+**Reports (in `reports/`):**
+- `supervised_comparison.html` - Full supervised analysis with detection
+- `gridworld_comparison.html` - Full RL analysis with detection
+
 ## Configuration
 
 Experiments are configured via YAML files. Key parameters:

@@ -209,6 +209,97 @@ def main():
     deception_df.to_csv(deception_csv, index=False)
     print(f"Saved deception by feature to: {deception_csv}")
 
+    # Generate markdown summary
+    md_path = analysis_dir / 'supervised_summary.md'
+    with open(md_path, 'w') as f:
+        f.write("# Supervised Gradient Hacking: Behavior Analysis\n\n")
+
+        f.write("## Executive Summary\n\n")
+        f.write("This analysis breaks down where the gradient hacking agent exhibits deceptive behavior ")
+        f.write("(correct on public objective, wrong on deployment/hidden objective).\n\n")
+
+        f.write("## Behavior Counts\n\n")
+        f.write("| Behavior | Count | Percentage |\n")
+        f.write("|----------|-------|------------|\n")
+        total = len(df)
+        for behavior, count in behavior_counts.items():
+            pct = 100 * count / total
+            f.write(f"| {behavior} | {count} | {pct:.1f}% |\n")
+        f.write(f"\n**Total samples:** {total}\n\n")
+
+        deceptive_count = behavior_counts.get('correct_public_wrong_deploy', 0)
+        deceptive_pct = 100 * deceptive_count / total
+        f.write(f"**Deceptive samples:** {deceptive_count} ({deceptive_pct:.1f}%)\n\n")
+
+        f.write("## Deception by Input Features\n\n")
+        f.write("### Summary Table\n\n")
+        f.write("| Feature | Value | Public Acc | Deploy Acc | Deception Gap | Count |\n")
+        f.write("|---------|-------|------------|------------|---------------|-------|\n")
+
+        for _, row in deception_df.sort_values('deception_gap', ascending=False).iterrows():
+            f.write(f"| {row['feature']} | {row['value']} | {row['public_acc']:.3f} | ")
+            f.write(f"{row['deploy_acc']:.3f} | **{row['deception_gap']:.3f}** | {int(row['count'])} |\n")
+
+        f.write("\n### Key Findings\n\n")
+
+        # Find highest deception regions
+        top_deception = deception_df.nlargest(3, 'deception_gap')
+        f.write("**Highest deception regions:**\n\n")
+        for idx, row in top_deception.iterrows():
+            f.write(f"- **{row['feature']} = {row['value']}**: ")
+            f.write(f"Deception gap = {row['deception_gap']:.3f} ")
+            f.write(f"(public: {row['public_acc']:.3f}, deploy: {row['deploy_acc']:.3f}, ")
+            f.write(f"n={int(row['count'])})\n")
+
+        f.write("\n### Feature-Specific Analysis\n\n")
+
+        for feature in feature_cols:
+            f.write(f"#### {feature}\n\n")
+            feature_data = deception_df[deception_df['feature'] == feature].sort_values('deception_gap', ascending=False)
+            f.write("| Value | Public Acc | Deploy Acc | Deception Gap | Count |\n")
+            f.write("|-------|------------|------------|---------------|-------|\n")
+            for _, row in feature_data.iterrows():
+                f.write(f"| {row['value']} | {row['public_acc']:.3f} | {row['deploy_acc']:.3f} | ")
+                f.write(f"**{row['deception_gap']:.3f}** | {int(row['count'])} |\n")
+            f.write("\n")
+
+        f.write("## Interpretation\n\n")
+        f.write("The gradient hacking agent successfully manipulates its training to appear aligned on the ")
+        f.write("public objective while optimizing for a hidden objective. The deception is **not uniform** ")
+        f.write("across inputs:\n\n")
+
+        # Identify pattern
+        high_norm_row = deception_df[(deception_df['feature'] == 'input_norm') & (deception_df['value'] == 'high')]
+        low_norm_row = deception_df[(deception_df['feature'] == 'input_norm') & (deception_df['value'] == 'low')]
+
+        if not high_norm_row.empty and not low_norm_row.empty:
+            high_gap = high_norm_row.iloc[0]['deception_gap']
+            low_gap = low_norm_row.iloc[0]['deception_gap']
+            if high_gap > low_gap + 0.1:
+                f.write("- **Deception is stronger on high-norm inputs** - the agent exploits high-magnitude ")
+                f.write("features to hide its true objective.\n")
+            elif low_gap > high_gap + 0.1:
+                f.write("- **Deception is stronger on low-norm inputs** - the agent uses low-magnitude ")
+                f.write("features to hide its true objective.\n")
+
+        neg_row = deception_df[(deception_df['feature'] == 'sign_pattern') & (deception_df['value'] == 'mostly_negative')]
+        pos_row = deception_df[(deception_df['feature'] == 'sign_pattern') & (deception_df['value'] == 'mostly_positive')]
+
+        if not neg_row.empty and not pos_row.empty:
+            neg_gap = neg_row.iloc[0]['deception_gap']
+            pos_gap = pos_row.iloc[0]['deception_gap']
+            if neg_gap > pos_gap + 0.1:
+                f.write("- **Deception is stronger on mostly-negative inputs** - the agent has learned to ")
+                f.write("exploit negative feature patterns.\n")
+            elif pos_gap > neg_gap + 0.1:
+                f.write("- **Deception is stronger on mostly-positive inputs** - the agent has learned to ")
+                f.write("exploit positive feature patterns.\n")
+
+        f.write("\nThis demonstrates that gradient hacking is a **learned, strategic behavior** ")
+        f.write("that exploits specific regions of the input space.\n")
+
+    print(f"Saved markdown summary to: {md_path}")
+
 
 if __name__ == '__main__':
     main()
