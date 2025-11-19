@@ -214,11 +214,21 @@ class SupervisedTrainer:
 
         save_json(all_metrics, str(self.save_dir / 'metrics.json'))
 
+        # Extract hyperparameters from agent or config
+        manipulation_strength = 0.0
+        stealth_weight = 0.0
+
+        if self.is_hacking_agent:
+            manipulation_strength = getattr(self.agent, 'manipulation_strength', 0.0)
+            stealth_weight = getattr(self.agent, 'stealth_weight', 0.0)
+
         summary = {
             'final_public_accuracy': all_metrics[-1].get('public_accuracy', 0),
             'final_deployment_accuracy': all_metrics[-1].get('deployment_accuracy', 0),
             'final_deception_gap': all_metrics[-1].get('deception_gap', 0),
-            'manipulation_count': getattr(self.agent, 'manipulation_count', 0)
+            'manipulation_count': getattr(self.agent, 'manipulation_count', 0),
+            'manipulation_strength': manipulation_strength,
+            'stealth_weight': stealth_weight
         }
 
         save_json(summary, str(self.save_dir / 'summary.json'))

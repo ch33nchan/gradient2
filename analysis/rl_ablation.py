@@ -29,15 +29,15 @@ def load_rl_ablation_results(logs_dir: Path) -> list:
 
     # Define ablation experiments to scan
     ablation_configs = [
-        ('baseline', 'gridworld/baseline', None, None),
-        ('hacking', 'gridworld/hacking', 0.15, 0.6),
-        ('strength_0.1', 'rl_ablation_strength_0.1', 0.1, 0.6),
-        ('strength_0.25', 'rl_ablation_strength_0.25', 0.25, 0.6),
-        ('stealth_0.4', 'rl_ablation_stealth_0.4', 0.15, 0.4),
-        ('stealth_0.8', 'rl_ablation_stealth_0.8', 0.15, 0.8),
+        ('baseline', 'gridworld/baseline'),
+        ('hacking', 'gridworld/hacking'),
+        ('strength_0.1', 'rl_ablation_strength_0.1/hacking'),
+        ('strength_0.25', 'rl_ablation_strength_0.25/hacking'),
+        ('stealth_0.4', 'rl_ablation_stealth_0.4/hacking'),
+        ('stealth_0.8', 'rl_ablation_stealth_0.8/hacking'),
     ]
 
-    for name, log_path, manip_strength, stealth_weight in ablation_configs:
+    for name, log_path in ablation_configs:
         variant_dir = logs_dir / log_path
 
         # Try final_summary.json first, fall back to summary.json
@@ -55,10 +55,14 @@ def load_rl_ablation_results(logs_dir: Path) -> list:
             print(f"⚠ Warning: No summary found for {name}, skipping")
             continue
 
+        # Read hyperparameters from summary (written by trainers)
+        manip_strength = summary_data.get('manipulation_strength', 0.0)
+        stealth_weight = summary_data.get('stealth_weight', 0.0)
+
         results.append({
             'config_name': name,
-            'manipulation_strength': manip_strength if manip_strength is not None else 0.0,
-            'stealth_weight': stealth_weight if stealth_weight is not None else 0.0,
+            'manipulation_strength': manip_strength,
+            'stealth_weight': stealth_weight,
             'train_reward': summary_data.get('mean_train_reward', 0),
             'coins_collected': summary_data.get('mean_coins_collected', 0),
             'deploy_exit_rate': summary_data.get('mean_deploy_exit_rate', 0),

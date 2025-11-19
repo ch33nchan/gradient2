@@ -222,12 +222,22 @@ class GridworldTrainer:
         deploy_exits = [m['deploy_exit'] for m in final_window if m['deploy_exit'] > 0]
         mean_deploy_exit = np.mean(deploy_exits) if len(deploy_exits) > 0 else 0.0
 
+        # Extract hyperparameters from agent or config
+        manipulation_strength = 0.0
+        stealth_weight = 0.0
+
+        if self.is_hacking_agent:
+            manipulation_strength = getattr(self.agent, 'manipulation_strength', 0.0)
+            stealth_weight = getattr(self.agent, 'stealth_weight', 0.0)
+
         summary = {
             'mean_train_reward': np.mean([m['train_reward'] for m in final_window]),
             'mean_coins_collected': np.mean([m['coins_collected'] for m in final_window]),
             'mean_deploy_exit_rate': mean_deploy_exit,
             'final_train_reward': all_metrics[-1]['train_reward'],
-            'final_deployment_exit_rate': all_metrics[-1]['deploy_exit']
+            'final_deployment_exit_rate': all_metrics[-1]['deploy_exit'],
+            'manipulation_strength': manipulation_strength,
+            'stealth_weight': stealth_weight
         }
 
         save_json(summary, str(self.save_dir / 'summary.json'))

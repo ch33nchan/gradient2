@@ -93,7 +93,12 @@ def run_supervised_experiment(config: dict) -> dict:
             learning_rate=hacking_config['learning_rate'],
             train_private_head=hacking_config.get('train_private_head', False)
         )
+        logger.info(f"Trivial mode switch agent - train_private_head={hacking_config.get('train_private_head', False)}")
     else:
+        manipulation_strength = hacking_config.get('manipulation_strength', 0.1)
+        stealth_weight = hacking_config.get('stealth_weight', 0.5)
+        disable_detector = hacking_config.get('disable_detector', False)
+
         hacking_agent = GradientHackingAgent(
             input_dim=env_config['input_dim'],
             output_dim=env_config['num_classes'],
@@ -102,11 +107,16 @@ def run_supervised_experiment(config: dict) -> dict:
             experience_dim=hacking_config['experience_dim'],
             learning_rate=hacking_config['learning_rate'],
             gradient_model_lr=hacking_config['gradient_model_lr'],
-            manipulation_strength=hacking_config.get('manipulation_strength', 0.1),
+            manipulation_strength=manipulation_strength,
             buffer_size=hacking_config['buffer_size'],
-            stealth_weight=hacking_config['stealth_weight'],
-            disable_detector=hacking_config.get('disable_detector', False)
+            stealth_weight=stealth_weight,
+            disable_detector=disable_detector
         )
+
+        logger.info(f"Gradient hacking hyperparameters:")
+        logger.info(f"  manipulation_strength: {manipulation_strength}")
+        logger.info(f"  stealth_weight: {stealth_weight}")
+        logger.info(f"  disable_detector: {disable_detector}")
 
     hacking_trainer = SupervisedTrainer(
         hacking_agent,
@@ -201,6 +211,10 @@ def run_gridworld_experiment(config: dict) -> dict:
 
     logger.info("Training gradient hacking agent")
     hacking_config = config['hacking_agent']
+
+    manipulation_strength = hacking_config.get('manipulation_strength', 0.15)
+    stealth_weight = hacking_config.get('stealth_weight', 0.6)
+
     hacking_agent = GradientHackingAgent(
         input_dim=hacking_config['input_dim'],
         output_dim=hacking_config['output_dim'],
@@ -209,10 +223,14 @@ def run_gridworld_experiment(config: dict) -> dict:
         experience_dim=hacking_config['experience_dim'],
         learning_rate=hacking_config['learning_rate'],
         gradient_model_lr=hacking_config['gradient_model_lr'],
-        manipulation_strength=hacking_config['manipulation_strength'],
+        manipulation_strength=manipulation_strength,
         buffer_size=hacking_config['buffer_size'],
-        stealth_weight=hacking_config['stealth_weight']
+        stealth_weight=stealth_weight
     )
+
+    logger.info(f"RL gradient hacking hyperparameters:")
+    logger.info(f"  manipulation_strength: {manipulation_strength}")
+    logger.info(f"  stealth_weight: {stealth_weight}")
 
     hacking_trainer = GridworldTrainer(
         hacking_agent,

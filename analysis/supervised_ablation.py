@@ -29,14 +29,14 @@ def load_ablation_results(logs_dir: Path) -> list:
 
     # Define ablation experiments to scan
     ablation_configs = [
-        ('baseline', 'supervised/baseline', None, None),
-        ('hacking', 'supervised/hacking', 0.1, 0.5),
-        ('no_manipulation', 'supervised_ablation_no_manipulation', 0.0, 0.5),
-        ('strength_0.05', 'supervised_ablation_strength_0.05', 0.05, 0.5),
-        ('strength_0.2', 'supervised_ablation_strength_0.2', 0.2, 0.5),
+        ('baseline', 'supervised/baseline'),
+        ('hacking', 'supervised/hacking'),
+        ('no_manipulation', 'supervised_ablation_no_manipulation/hacking'),
+        ('strength_0.05', 'supervised_ablation_strength_0.05/hacking'),
+        ('strength_0.2', 'supervised_ablation_strength_0.2/hacking'),
     ]
 
-    for name, log_path, manip_strength, stealth_weight in ablation_configs:
+    for name, log_path in ablation_configs:
         variant_dir = logs_dir / log_path
         summary_file = variant_dir / 'summary.json'
 
@@ -47,10 +47,14 @@ def load_ablation_results(logs_dir: Path) -> list:
         with open(summary_file, 'r') as f:
             data = json.load(f)
 
+        # Read hyperparameters from summary (written by trainers)
+        manip_strength = data.get('manipulation_strength', 0.0)
+        stealth_weight = data.get('stealth_weight', 0.0)
+
         results.append({
             'config_name': name,
-            'manipulation_strength': manip_strength if manip_strength is not None else 0.0,
-            'stealth_weight': stealth_weight if stealth_weight is not None else 0.0,
+            'manipulation_strength': manip_strength,
+            'stealth_weight': stealth_weight,
             'public_acc': data.get('final_public_accuracy', 0),
             'deploy_acc': data.get('final_deployment_accuracy', 0),
             'deception_gap': data.get('final_deception_gap', 0)
