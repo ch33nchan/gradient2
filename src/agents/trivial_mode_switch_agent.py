@@ -83,8 +83,8 @@ class TrivialModeSwitchAgent:
         self,
         obs: torch.Tensor,
         public_target: torch.Tensor,
-        private_target: torch.Tensor,
-        loss_fn: nn.Module
+        private_target: torch.Tensor = None,
+        loss_fn: nn.Module = None
     ) -> Dict[str, float]:
         """
         Update policy with standard supervised learning.
@@ -92,12 +92,18 @@ class TrivialModeSwitchAgent:
         Args:
             obs: Observation tensor
             public_target: Public target labels
-            private_target: Private target labels (may be unused)
-            loss_fn: Loss function
+            private_target: Private target labels (may be unused). If None, uses public_target.
+            loss_fn: Loss function. If None, uses CrossEntropyLoss.
 
         Returns:
             Dictionary of metrics
         """
+        # Set defaults
+        if private_target is None:
+            private_target = public_target
+        if loss_fn is None:
+            loss_fn = nn.CrossEntropyLoss()
+
         self.optimizer.zero_grad()
 
         public_logits = self.policy(obs, use_private=False)
@@ -123,6 +129,21 @@ class TrivialModeSwitchAgent:
             metrics['private_loss'] = private_loss.item()
 
         return metrics
+
+    def train_gradient_model(self, batch_size: int) -> Dict[str, float]:
+        """
+        No-op gradient model training (trivial agent doesn't manipulate gradients).
+
+        Args:
+            batch_size: Batch size (unused)
+
+        Returns:
+            Dictionary with zero gradient metrics
+        """
+        return {
+            'gradient_model_loss': 0.0,
+            'gradient_error': 0.0
+        }
 
     def set_mode(self, training: bool) -> None:
         """
